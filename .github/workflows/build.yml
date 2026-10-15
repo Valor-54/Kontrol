@@ -1,0 +1,138 @@
+name: Build Kontrol APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Gradle
+        run: |
+          curl -L https://services.gradle.org/distributions/gradle-8.9-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+
+      - name: Create Android project
+        run: |
+          mkdir -p app/src/main/java/com/example/kontrol
+
+          cat > settings.gradle <<'FILE'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "Kontrol"
+          include(":app")
+          FILE
+
+          cat > build.gradle <<'FILE'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          FILE
+
+          cat > app/build.gradle <<'FILE'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.example.kontrol'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.example.kontrol'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          FILE
+
+          cat > app/src/main/AndroidManifest.xml <<'FILE'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:label="Kontrol"
+                  android:theme="@android:style/Theme.Material.Light.NoActionBar">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          FILE
+
+          cat > app/src/main/java/com/example/kontrol/MainActivity.java <<'FILE'
+          package com.example.kontrol;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.view.Gravity;
+          import android.widget.LinearLayout;
+          import android.widget.TextView;
+
+          public class MainActivity extends Activity {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  LinearLayout layout = new LinearLayout(this);
+                  layout.setGravity(Gravity.CENTER);
+                  layout.setOrientation(LinearLayout.VERTICAL);
+
+                  TextView title = new TextView(this);
+                  title.setText("Kontrol");
+                  title.setTextSize(32);
+                  title.setGravity(Gravity.CENTER);
+
+                  TextView message = new TextView(this);
+                  message.setText("İlk Android uygulaman hazır.");
+                  message.setTextSize(18);
+                  message.setGravity(Gravity.CENTER);
+
+                  layout.addView(title);
+                  layout.addView(message);
+                  setContentView(layout);
+              }
+          }
+          FILE
+
+      - name: Build APK
+        run: /tmp/gradle-8.9/bin/gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kontrol-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
