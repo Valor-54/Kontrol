@@ -1,0 +1,6 @@
+{
+  "name": "FlexPad Gamepad",
+  "description": "Android için tam fonksiyonel sanal gamepad, çift joystick, şeffaf overlay, Shizuku ve AccessibilityService gerçek giriş gönderme motoru.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
