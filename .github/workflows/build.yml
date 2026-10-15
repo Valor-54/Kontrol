@@ -1,3 +1,4 @@
+
 name: Build Omnipad APK
 
 on:
@@ -24,7 +25,8 @@ jobs:
 
       - name: Install Android SDK
         run: |
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          sdkmanager "platforms;android-36"
+          sdkmanager "build-tools;36.0.0"
           yes | sdkmanager --licenses
 
       - name: Set up Gradle
@@ -41,3 +43,4 @@ jobs:
           name: Omnipad-Virtual-Controller-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
